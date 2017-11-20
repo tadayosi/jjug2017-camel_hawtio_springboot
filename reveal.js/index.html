@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title><small>Apache Camel + hawtio + Spring Boot による</small><br/>モダンなインテグレーション<br/>マイクロサービス</title>
+
+		<meta name="description" content="<small>Apache Camel + hawtio + Spring Boot による</small><br/>モダンなインテグレーション<br/>マイクロサービス">
+		<meta name="author" content="<font color="orange">#ccc_c2</font>">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css" id="theme">
+		<link rel="stylesheet" href="../presentation.css">
+
+		<!-- Code syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides">
+
+				<section>
+					<h2><small>Apache Camel + hawtio + Spring Boot による</small><br/>モダンなインテグレーション<br/>マイクロサービス</h2>
+					<p><font color="orange">#ccc_c2</font></p>
+					<p>2017.11.18</p>
+				</section>
+
+
+				<section>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 70%" />
+</colgroup>
+<tbody>
+<tr>
+<td style="vertical-align: middle">
+<img src="../images/profile2.jpg" /> <br/> <small> Twitter: <a href="https://twitter.com/tadayosi">@tadayosi</a><br/> GitHub: <a href="https://github.com/tadayosi">tadayosi</a> </small>
+</td>
+<td style="vertical-align: top">
+<p>佐藤　匡剛<br/><small>さとう  　  ただよし</small></p>
+<p>シニアソフトウェアエンジニア<br />
+@ Red Hat</p>
+<table>
+<tr>
+<td style="vertical-align: middle">
+<ul>
+<li><small>Apache Camel<br/>contributor</small></li>
+</ul>
+</td>
+<td>
+<img src="../20171118-jjug_camel_hawtio/camel-tadayosi.png" width="400" />
+</td>
+</tr>
+<tr>
+<td style="vertical-align: middle">
+<ul>
+<li><small>hawtio<br/>committer</small></li>
+</ul>
+</td>
+<td>
+<img src="../20171118-jjug_camel_hawtio/hawtio-tadayosi.png" width="400" />
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="agenda" class="level2">
+<h2>Agenda</h2>
+<ol type="1">
+<li>インテグレーションマイクロサービス</li>
+<li>Apache Camel とは</li>
+<li>インテグレーションマイクロサービスの作り方</li>
+<li>hawtio によるモニタリング</li>
+</ol>
+</section>
+<section id="agenda-1" class="level2">
+<h2>Agenda</h2>
+<ol type="1">
+<li><font color="orange"><strong>インテグレーションマイクロサービス</strong></font></li>
+<li>Apache Camel とは</li>
+<li>インテグレーションマイクロサービスの作り方</li>
+<li>hawtio によるモニタリング</li>
+</ol>
+</section>
+<section id="section" class="level2">
+<h2></h2>
+<section data-background-image="../images/rh-bg7.jpg">
+<h2>
+インテグレーション<br/>マイクロサービス
+</h2>
+</section>
+</section>
+<section id="マイクロサービスの特徴" class="level2">
+<h2>マイクロサービスの特徴</h2>
+<ol type="1">
+<li>サイズが小さい</li>
+<li>モニタリング可能</li>
+<li>障害を前提にした設計</li>
+<li>高いカスタマイズ性</li>
+<li>賢いエンドポイントと単純なパイプ</li>
+<li>テスト容易性</li>
+</ol>
+</section>
+<section id="section-1" class="level2">
+<h2></h2>
+<p>賢いエンドポイントと単純なパイプ<br />
+Smart endpoints and dumb pipes</p>
+<blockquote>
+<p><small>“The microservice community favours an alternative approach: <font color="red">smart endpoints and dumb pipes</font>. Applications built from microservices aim to be as decoupled and as cohesive as possible – they own their own domain logic and act more as filters in the classical Unix sense – receiving a request, applying logic as appropriate and producing a response. These are choreographed using simple RESTish protocols rather than complex protocols such as WS-Choreography or BPEL or orchestration by a central tool.”<br />
+– James Lewis &amp; Martin Fowler</small></p>
+</blockquote>
+<p><small> <a href="https://martinfowler.com/articles/microservices.html" class="uri">https://martinfowler.com/articles/microservices.html</a> </small></p>
+</section>
+<section id="section-2" class="level2">
+<h2></h2>
+<p>ルーティングロジックがエンドポイントに</p>
+<table>
+<colgroup>
+<col style="width: 45%" />
+<col style="width: 10%" /<col style="width: 45%" />
+</colgroup>
+<tr>
+<td style="vertical-align: middle; text-align: center">
+<img src="../20171118-jjug_camel_hawtio/esb-vs-ms-esb.png" /> <small>SOA</small>
+</td>
+<td style="vertical-align: middle; text-align: center">
+vs.
+</td>
+<td>
+<div style="vertical-align: middle; text-align: center">
+<p><img src="../20171118-jjug_camel_hawtio/esb-vs-ms-ms.png" /> <small>マイクロサービス</small></p>
+</div>
+</td>
+</tr>
+</table>
+</section>
+<section id="agenda-2" class="level2">
+<h2>Agenda</h2>
+<ol type="1">
+<li>インテグレーションマイクロサービス</li>
+<li><font color="orange"><strong>Apache Camel とは</strong></font></li>
+<li>インテグレーションマイクロサービスの作り方</li>
+<li>hawtio によるモニタリング</li>
+</ol>
+</section>
+<section id="section-3" class="level2">
+<h2></h2>
+<section data-background-color="#ffffff" data-transition="none">
+<img src="../20171118-jjug_camel_hawtio/camel-logo.png" />
+</section>
+</section>
+<section id="apache-camel" class="level2">
+<h2>Apache Camel</h2>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 70%" />
+</colgroup>
+<tr>
+<td style="vertical-align: middle">
+<img src="../20171118-jjug_camel_hawtio/camel.png" />
+</td>
+<td>
+<div style="vertical-align: top">
+<ul>
+<li>軽量なインテグレーション<br />
+フレームワーク
+<ul>
+<li><code>camel-core.jar</code> ≈ 4.8M</li>
+</ul></li>
+<li>直観的なルーティング DSL</li>
+<li>Enterprise Integration Patterns</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</section>
+<section id="apache-camel-1" class="level2">
+<h2>Apache Camel</h2>
+<table>
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 70%" />
+</colgroup>
+<tr>
+<td style="vertical-align: middle">
+<img src="../20171118-jjug_camel_hawtio/camel.png" />
+</td>
+<td>
+<div style="vertical-align: top">
+<ul>
+<li>280+ の接続コンポーネント</li>
+<li>GUI 開発環境（Eclipse）</li>
+<li>マイクロサービスのサポート
+<ul>
+<li>Spring Boot / WildFly Swarm</li>
+<li>Netflix Hystrix</li>
+</ul></li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</section>
+<section id="camel-でできること" class="level2">
+<h2>🐪 Camel でできること 🐪</h2>
+<ol type="1">
+<li><font color="orange">HTTP/REST</font> で受け取ったリクエストを <font color="orange">Twitter</font> にツィートする</li>
+<li><font color="orange">SOAP</font> で受け取ったリクエストを <font color="orange">Kafka</font> へ流す</li>
+<li><font color="orange">ActiveMQ</font> から受け取った JMS メッセージを、データの内容に応じて：</li>
+</ol>
+<ul>
+<li><font color="orange">MongoDB</font> に永続化する</li>
+<li>別の <font color="orange">Web サービス</font> に投げる</li>
+<li><font color="orange">Twilio</font> を使ってスマホに SMS で通知する</li>
+</ul>
+</section>
+<section id="java-dsl" class="level2">
+<h2>Java DSL</h2>
+<p><small><font color="orange">HTTP</font> で受け取ったリクエストを <font color="orange">Twitter</font> にツィートする</small></p>
+<pre><code>public class HelloRoute extends RouteBuilder {
+  @Override
+  public void configure() throws Exception {
+
+    from(&quot;undertow:http://localhost:8080/hello&quot;)
+      .log(&quot;name = ${in.header.name}&quot;)
+      .setBody(simple(&quot;Hello, ${in.header.name}! #ccc_c2&quot;))
+      .to(&quot;twitter-timeline://user&quot;)
+      .setBody(constant(&quot;Success!&quot;));
+
+  }
+}</code></pre>
+</section>
+<section id="alt-java-でも-ok" class="level2">
+<h2>Alt Java でも OK</h2>
+<p>(Scala)</p>
+<pre><code>class HelloRoute extends RouteBuilder {
+  override def configure: Unit = {
+
+    from(&quot;undertow:http://localhost:8080/hello&quot;)
+      .log(&quot;name = ${in.header.name}&quot;)
+      .setBody(simple(&quot;Hello, ${in.header.name}! #ccc_c2&quot;))
+      .to(&quot;twitter-timeline://user&quot;)
+      .setBody(constant(&quot;Success!&quot;))
+
+  }
+}</code></pre>
+</section>
+<section id="spring-xml-dsl" class="level2">
+<h2>Spring XML DSL</h2>
+<p><code>&lt;beans&gt; ... &lt;/beans&gt;</code> の中に定義する</p>
+<pre><code>&lt;camelContext xmlns=&quot;http://camel.apache.org/schema/spring&quot;&gt;
+&lt;route&gt;
+  &lt;from uri=&quot;undertow:http://localhost:8081/hello&quot; /&gt;
+  &lt;log message=&quot;name = ${in.header.name}&quot; /&gt;
+  &lt;setBody&gt;
+    &lt;simple&gt;Hello, ${in.header.name}! #ccc_c2&lt;/simple&gt;
+  &lt;/setBody&gt;
+  &lt;to uri=&quot;twitter-timeline://user&quot; /&gt;
+  &lt;setBody&gt;
+    &lt;constant&gt;Success!&lt;/constant&gt;
+  &lt;/setBody&gt;
+&lt;/route&gt;
+&lt;/camelContext&gt;</code></pre>
+</section>
+<section id="section-4" class="level2">
+<h2></h2>
+<section data-background-image="../images/eip.jpg" data-background-size="auto 70%" data-background-position="left">
+<table>
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 60%" />
+</colgroup>
+<tbody>
+<tr>
+<td>
+</td>
+<td>
+<div style="vertical-align: middle">
+<p><strong>Enterprise Integration Patterns</strong></p>
+<ul>
+<li>システム間連携のベスト<br />
+プラクティス</li>
+<li>65 のデザインパターン</li>
+</ul>
+<p><img src="../20171118-jjug_camel_hawtio/eip.png" width="500" /></p>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="content-based-router" class="level2">
+<h2>Content-Based Router</h2>
+<p><img src="../20171118-jjug_camel_hawtio/eip-ContentBasedRouter.gif" /></p>
+<pre><code>from(&quot;direct:input&quot;)
+  .choice()
+    .when(header(&quot;country&quot;).isEqualTo(&quot;JP&quot;))
+      .to(&quot;direct:japan&quot;)
+    .when(header(&quot;country&quot;).isEqualTo(&quot;US&quot;))
+      .to(&quot;direct:us&quot;)
+    .when(header(&quot;country&quot;).isEqualTo(&quot;UK&quot;))
+      .to(&quot;direct:uk&quot;)
+    .otherwise()
+      .to(&quot;direct:other&quot;);</code></pre>
+</section>
+<section id="例外処理" class="level2">
+<h2>例外処理</h2>
+<p>例： 1,000 ミリ秒の間隔で、3 回まで再送を試みる</p>
+<pre><code>errorHandler(defaultErrorHandler()
+  .maximumRedeliveries(3)
+  .redeliveryDelay(1000)
+  .retryAttemptedLogLevel(LoggingLevel.WARN));
+
+from(&quot;undertow:http://localhost:8080/hello&quot;)
+  ...</code></pre>
+</section>
+<section id="のコンポーネント" class="level2">
+<h2>280+ のコンポーネント</h2>
+<p><small> <a href="https://github.com/apache/camel/blob/camel-2.20.0/components/readme.adoc" class="uri">https://github.com/apache/camel/blob/camel-2.20.0/components/readme.adoc</a></p>
+<table>
+<tbody>
+<tr class="odd">
+<td>AWS</td>
+<td>Azure</td>
+<td>Box</td>
+<td>Cassandra</td>
+<td>Consul</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>CouchDB</td>
+<td>CXF</td>
+<td>DigitalOcean</td>
+<td>Docker</td>
+<td>Dropbox</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Ehcache</td>
+<td>Elasticsearch</td>
+<td>Etcd</td>
+<td>Facebook</td>
+<td>Ganglia</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>GitHub</td>
+<td>Google</td>
+<td>Hazelcast</td>
+<td>Hadoop</td>
+<td>Hipchat</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Ignite</td>
+<td>Infinispan</td>
+<td>IronMQ</td>
+<td>jBPM</td>
+<td>jclouds</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>JIRA</td>
+<td>JT400</td>
+<td>Kafka</td>
+<td>Kubernetes</td>
+<td>LinkedIn</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Lucene</td>
+<td>MongoDB</td>
+<td>MQTT</td>
+<td>Nagios</td>
+<td>OpenStack</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>OptaPlanner</td>
+<td>PubNub</td>
+<td>RabbitMQ</td>
+<td>Salesforce</td>
+<td>SAP</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>ServiceNow</td>
+<td>Splunk</td>
+<td>STOMP</td>
+<td>Telegram</td>
+<td>Thrift</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Tika</td>
+<td>Twilio</td>
+<td>Twitter</td>
+<td>Vert.x</td>
+<td>Yammer</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Zendesk</td>
+<td>ZooKeeper</td>
+<td>…</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p></small></p>
+</section>
+<section id="eclipse-プラグイン" class="level2">
+<h2>Eclipse プラグイン</h2>
+<p><img src="../20171118-jjug_camel_hawtio/fuse-tooling.png" width="700" /></p>
+<p><small> <a href="http://tools.jboss.org/features/fusetools.html" class="uri">http://tools.jboss.org/features/fusetools.html</a> </small></p>
+</section>
+<section id="コンポーネントの開発も簡単" class="level2">
+<h2>コンポーネントの開発も簡単</h2>
+<ul>
+<li>API Component Framework <small style="vertical-align: middle">by Apache Camel</small></li>
+<li>サービスの API からスタブを自動生成：
+<ul>
+<li>Java SDK</li>
+<li>WADL（REST サービス）</li>
+</ul></li>
+</ul>
+</section>
+<section id="agenda-3" class="level2">
+<h2>Agenda</h2>
+<ol type="1">
+<li>インテグレーションマイクロサービス</li>
+<li>Apache Camel とは</li>
+<li><font color="orange"><strong>インテグレーションマイクロサービスの作り方</strong></font></li>
+<li>hawtio によるモニタリング</li>
+</ol>
+</section>
+<section id="section-5" class="level2">
+<h2></h2>
+<section data-background-image="../images/rh-bg6.jpg">
+<h2>
+インテグレーション<br/>マイクロサービスの作り方
+</h2>
+</section>
+</section>
+<section id="camel-spring-boot" class="level2">
+<h2>Camel ⚔ Spring Boot</h2>
+<ol type="1">
+<li>Spring Boot プロジェクトを作成</li>
+<li>Camel コンポーネント Starter を <code>pom.xml</code> に追加</li>
+<li><code>@Component</code> を付けた Camel ルートを定義</li>
+</ol>
+</section>
+<section id="spring-initializr" class="level2">
+<h2>Spring Initializr</h2>
+<p><a href="https://start.spring.io" class="uri">https://start.spring.io</a></p>
+<p><img src="../20171118-jjug_camel_hawtio/spring-initializr.png" /></p>
+</section>
+<section id="camel-の-starter-を追加" class="level2">
+<h2>Camel の Starter を追加</h2>
+<pre><code>&lt;dependencies&gt;
+...
+&lt;dependency&gt;
+  &lt;groupId&gt;org.apache.camel&lt;/groupId&gt;
+  &lt;artifactId&gt;camel-spring-boot-starter&lt;/artifactId&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+  &lt;groupId&gt;org.apache.camel&lt;/groupId&gt;
+  &lt;artifactId&gt;camel-undertow-starter&lt;/artifactId&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+  &lt;groupId&gt;org.apache.camel&lt;/groupId&gt;
+  &lt;artifactId&gt;camel-twitter-starter&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</section>
+<section id="camel-ルートを定義" class="level2">
+<h2>Camel ルートを定義</h2>
+<pre><code>@Component
+public class HelloRoute extends RouteBuilder {
+
+  @Override
+  public void configure() throws Exception {
+    from(&quot;undertow:http://localhost:8080/hello&quot;)
+      ...</code></pre>
+</section>
+<section id="spring-xml-の場合" class="level2">
+<h2>Spring XML の場合</h2>
+<p><code>@ImportResource</code> で XML を読み込む</p>
+<pre><code>@SpringBootApplication
+@ImportResource(&quot;classpath:camel-context.xml&quot;)
+public class CamelApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(CamelApplication.class, args);
+    }
+}</code></pre>
+</section>
+<section id="section-6" class="level2">
+<h2></h2>
+<section data-background-color="#ffffff" data-transition="none">
+<img src="../20171118-jjug_camel_hawtio/hystrix.png" />
+</section>
+</section>
+<section id="circuit-breaker-パターン" class="level2">
+<h2>Circuit Breaker パターン</h2>
+<p><img src="../20171118-jjug_camel_hawtio/circuit-breaker.png" /></p>
+<p><small> <a href="https://martinfowler.com/bliki/CircuitBreaker.html" class="uri">https://martinfowler.com/bliki/CircuitBreaker.html</a> </small></p>
+</section>
+<section id="hystrix-in-java" class="level2">
+<h2>Hystrix in Java</h2>
+<pre><code>public class HelloCommand extends HystrixCommand&lt;String&gt; {
+  public HelloCommand() {
+    super(HystrixCommandGroupKey.Factory.asKey(&quot;SampleGroup&quot;));
+  }
+  protected String run() throws Exception {
+    // なにか例外の発生する可能性のある処理をする
+    return ...;
+  }
+}</code></pre>
+<pre><code>HelloCommand cmd = new HelloCommand();
+String result = cmd.execute();</code></pre>
+</section>
+<section id="hystrix-in-camel" class="level2">
+<h2>Hystrix in Camel</h2>
+<pre><code>from(&quot;undertow:http://localhost:8080/hello&quot;)
+  .log(&quot;name = ${in.header.name}&quot;)
+  .setBody(simple(&quot;Hello, ${in.header.name}! #ccc_c2&quot;))
+  // 自動的に HystrixCommand を生成／実行
+  .hystrix()
+    .to(&quot;twitter-timeline://user&quot;)
+    .setBody(constant(&quot;Success!&quot;))
+  .onFallback()
+    .setBody(constant(&quot;Error - I&#39;m seeing the whale!&quot;))
+  .end();</code></pre>
+</section>
+<section id="使い方" class="level2">
+<h2>使い方</h2>
+<p><code>pom.xml</code> に以下を追加</p>
+<pre><code>&lt;dependency&gt;
+  &lt;groupId&gt;org.apache.camel&lt;/groupId&gt;
+  &lt;artifactId&gt;camel-hystrix&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+</section>
+<section id="demo" class="level2">
+<h2>Demo</h2>
+</section>
+<section id="agenda-4" class="level2">
+<h2>Agenda</h2>
+<ol type="1">
+<li>インテグレーションマイクロサービス</li>
+<li>Apache Camel とは</li>
+<li>インテグレーションマイクロサービスの作り方</li>
+<li><font color="orange"><strong>hawtio によるモニタリング</strong></font></li>
+</ol>
+</section>
+<section id="section-7" class="level2">
+<h2></h2>
+<section data-background-image="../images/rh-bg8.jpg">
+<h2>
+マイクロサービスを<br/>どうやって監視する？
+</h2>
+</section>
+</section>
+<section id="jvm-の監視といえば-jmx" class="level2">
+<h2>JVM の監視といえば…<br/><br/>JMX</h2>
+</section>
+<section id="section-8" class="level2">
+<h2></h2>
+<p>JConsole …</p>
+<p><img src="../20171118-jjug_camel_hawtio/jconsole.png" /></p>
+</section>
+<section id="section-9" class="level2">
+<h2></h2>
+<section data-background-color="#ffffff" data-transition="none">
+<img src="../20171118-jjug_camel_hawtio/hawtio.png" /> <img src="../20171118-jjug_camel_hawtio/jolokia.png" />
+</section>
+</section>
+<section id="hawtio" class="level2">
+<h2><img src="../20171118-jjug_camel_hawtio/hawtio-icon.png" style="vertical-align: bottom" /> hawtio</h2>
+<p>🔥 Web ベースのイケてる JMX 監視ツール 🔥</p>
+<p><small style="vertical-align: middle">Made by</small> AngularJS 1.x + Jolokia</p>
+<p><img src="../20171118-jjug_camel_hawtio/hawtio-screenshot.png" /></p>
+</section>
+<section id="jolokia" class="level2">
+<h2>Jolokia</h2>
+<p>🌶🌶🌶 JMX にカプサイシンをぶっ込む 🌶🌶🌶</p>
+<p><img src="../20171118-jjug_camel_hawtio/jolokia_architecture.png" /></p>
+<p><small> <a href="https://jolokia.org/reference/html/architecture.html" class="uri">https://jolokia.org/reference/html/architecture.html</a> </small></p>
+</section>
+<section id="hawtio-spring-boot" class="level2">
+<h2>hawtio ⚔ Spring Boot</h2>
+<p><code>pom.xml</code> に <code>dependency</code> を追加するだけ！</p>
+<pre><code>&lt;dependencies&gt;
+
+    &lt;!-- hawtio --&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;io.hawt&lt;/groupId&gt;
+        &lt;artifactId&gt;hawtio-springboot&lt;/artifactId&gt;
+        &lt;version&gt;1.5.6&lt;/version&gt;
+    &lt;/dependency&gt;
+
+&lt;dependencies&gt;</code></pre>
+</section>
+<section id="demo-1" class="level2">
+<h2>Demo</h2>
+</section>
+<section id="section-10" class="level2">
+<h2></h2>
+<section data-background-image="../images/rh-bg2.jpg">
+<h2 style="color: black">
+ラクダ乗りになるには
+</h2>
+</section>
+</section>
+<section id="section-11" class="level2">
+<h2></h2>
+<section data-background-image="../images/camel-in-action2.png" data-background-size="auto 70%" data-background-position="left">
+<table>
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 65%" />
+</colgroup>
+<tbody>
+<tr>
+<td>
+</td>
+<td>
+<div style="vertical-align: middle">
+<h3>
+Camel in Action 2
+</h3>
+<p><br/></p>
+<p><font color="orange"><strong>来月（12月）出版予定！</strong></font></p>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="section-12" class="level2">
+<h2></h2>
+<section data-background-image="../20171118-jjug_camel_hawtio/jcug.jpg">
+<h2>
+Japan Camel User Group<br/>(JCUG)
+</h2>
+<p><br/><br/><br/></p>
+<p><a href="https://jcug-oss.github.io" class="uri">https://jcug-oss.github.io</a></p>
+<p><font color="orange"><strong>Camel in Action 2 の読書会を開催中！</strong></font></p>
+<p><br/></p>
+</section>
+</section>
+<section id="section-13" class="level2">
+<h2></h2>
+<section data-background-image="../images/rh-bg4.jpg">
+<h1>
+<font color="black">Q &amp; A</font>
+</h1>
+</section>
+</section>
+<section id="thank-you" class="level2">
+<h2>Thank you!</h2>
+</section>
+
+			</div>
+
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// Full list of configuration options available at:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: false,
+				progress: true,
+				slideNumber: 'c/t',
+				history: true,
+				center: true,
+				width: 1024,
+				height: 768,
+
+				transition: 'fade', // none/fade/slide/convex/concave/zoom
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+				// Optional reveal.js plugins
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>

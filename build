@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ -z $1 ]; then
+  echo "pass a markdown file."
+  exit
+fi
+
+OUTPUT=reveal.js/index.html
+
+pandoc --section-divs -t html5+smart -s --template template-revealjs.html --variable theme="${2:-"black"}" --variable transition="${3:-"slide"}" -o $OUTPUT $1
